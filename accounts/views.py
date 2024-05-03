@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import UserSerializer, UserDetailSerializer
+from .serializers import UserSerializer, UserDetailSerializer, UserUpdateSerializer
 
 # Create your views here.
 
@@ -26,3 +26,20 @@ class UserDetailAPIView(APIView):
         user=self.get_object(username)
         serializer=UserDetailSerializer(user)
         return Response(serializer.data)
+    
+    def put(self, request, username):
+        password=request.data.get('password')
+        password2=request.data.get('password2')
+        if (password or password2) and (password!=password2):
+            return Response({'error':"password or password2 not exist or password is not equal"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user=self.get_object(username)
+        serializer=UserUpdateSerializer(user, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            user=serializer.save()
+            if password:
+                user.set_password(password)
+                user.save()
+            serializer=UserDetailSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)

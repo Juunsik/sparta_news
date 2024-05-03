@@ -24,3 +24,16 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "description",
             "email",
         )
+
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+    password2 = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            "description",
+            "password",
+            "password2",
+        )
