@@ -1,7 +1,13 @@
 from django.urls import path
-from .views import NewsDetailAPIView, NewsListAPIView
+from . import views
 
 urlpatterns = [
-    path('', NewsListAPIView.as_view(), name='news-list'),
-    path('<int:pk>/', NewsDetailAPIView.as_view(), name='news-detail')
+    path('', views.NewsListAPIView.as_view(), name='news-list'),
+    path('<int:pk>/', views.NewsDetailAPIView.as_view(), name='news-detail'),
+    path("<int:news_pk>/comments/", views.CommentGetPost.as_view()),
+    path("comments/<int:comment_pk>/", views.CommentPutDelete.as_view()),
+    path("likes/<int:news_pk>/", views.LikeNews.as_view()),
+    path("likes/news/", views.LikedNews.as_view()),
+    path("likes/comments/<int:comment_pk>/", views.LikeComment.as_view()),
+    path("likes/comments/", views.LikedComments.as_view()),
 ]
