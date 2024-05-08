@@ -34,12 +34,12 @@ class UserDetailAPIView(APIView):
             return Response({'error':"password or password2 not exist or password is not equal"}, status=status.HTTP_400_BAD_REQUEST)
         
         user=self.get_object(username)
-        serializer=UserUpdateSerializer(user, data=request.data, partial=True)
+        serializer=UserDetailSerializer(user, data=request.data, partial=True)
         
         if serializer.is_valid():
             user=serializer.save()
             if password:
                 user.set_password(password)
                 user.save()
-            serializer=UserDetailSerializer(user)
+            serializer=UserUpdateSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)

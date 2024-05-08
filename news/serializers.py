@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from .models import Comment
 from .models import News
 from django.contrib.auth import get_user_model
 
@@ -17,16 +18,27 @@ class NewsSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['author'] = self.context['request'].user
         return super().create(validated_data)
-from .models import Comment
-
+    
+    
+    
+    
 class CommentSerializer(serializers.ModelSerializer):
+    
+    user = serializers.SerializerMethodField()
+    
     class Meta:
         model = Comment
-        fields = ["content", "created_at", "updated_at"]
+        fields = ["content", "created_at", "updated_at", "user"]
+        
+    def get_user(self, obj):
+        return obj.user.username
         
     def create(self, validated_data):
-        news_id = self.context.get('view').kwargs.get('news_id')
-        news = News.objects.get(id=news_id)
+        news_pk = self.context.get('view').kwargs.get('news_pk')
+        news = News.objects.get(id=news_pk)
         validated_data['news'] = news
         return super().create(validated_data)
 
+
+
+    

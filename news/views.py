@@ -2,16 +2,15 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.views import APIView
+from .models import Comment, News
+from .serializers import CommentSerializer, NewsSerializer
 from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
-from .models import News, Comment
-from .serializers import NewsSerializer, CommentSerializer
-
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework import status
 
 # Create your views here.
-
-
 class NewsListAPIView(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -39,13 +38,13 @@ class NewsListAPIView(APIView):
 class NewsDetailAPIView(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    def get(self, request, pk):
-        news = get_object_or_404(News, pk=pk)
+    def get(self, request, news_pk):
+        news = get_object_or_404(News, pk=news_pk)
         serializer = NewsSerializer(news)
         return Response(serializer.data)
 
-    def put(self, request, pk):
-        news = get_object_or_404(News, pk=pk)
+    def put(self, request, news_pk):
+        news = get_object_or_404(News, pk=news_pk)
         serializer = NewsSerializer(news, data=request.data, partial=True)
         if serializer.is_valid():
             if request.user.is_authenticated and news.author == request.user:
@@ -58,26 +57,23 @@ class NewsDetailAPIView(APIView):
                 )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, pk):
-        news = get_object_or_404(News, pk=pk)
+    def delete(self, request, news_pk):
+        news = get_object_or_404(News, pk=news_pk)
         if request.user.is_authenticated and news.author == request.user:
             news.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
-            return Response(
-                {"detail": "삭제 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN
-            )
+            return Response({"detail": "삭제 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
 
-# Create your views here.
 class CommentGetPost(APIView):
-    def get(self, request, news_id):
-        news = News.objects.get(id=news_id)
+    def get(self, request, news_pk):
+        news = News.objects.get(id=news_pk)
         comments = news.comments.all()
         serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data)
-
-    def post(self, request, news_id):
+    
+    def post(self, request, news_pk):
         if not request.user.is_authenticated:
             return Response(
                 {"error": "인증이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED
@@ -94,7 +90,7 @@ class CommentPutDelete(APIView):
     permission_classes = [IsAuthenticated]
 
     def get_object(self, comment_pk):
-        return get_object_or_404(Comment, commentid=comment_pk)
+        return get_object_or_404(Comment, pk=comment_pk)
 
     def put(self, request, comment_pk):
         comment = self.get_object(comment_pk)
@@ -118,3 +114,5 @@ class CommentPutDelete(APIView):
         comment.delete()
         data = {"delete": f"댓글 ({comment_pk})번이 삭제되었습니다."}
         return Response(data, status=status.HTTP_204_NO_CONTENT)
+
+
