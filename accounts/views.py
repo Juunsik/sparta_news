@@ -1,9 +1,10 @@
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth import get_user_model
-from rest_framework import status
+from rest_framework import status, generics, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import UserSerializer, UserDetailSerializer, UserUpdateSerializer
+from .serializers import UserSerializer, UserDetailSerializer, UserUpdateSerializer, FollowSerializer
+from .models import Follow, User
 
 # Create your views here.
 
@@ -43,3 +44,24 @@ class UserDetailAPIView(APIView):
                 user.save()
             serializer=UserUpdateSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
+        
+
+
+
+class FollowCreateAPIView(generics.CreateAPIView):
+    serializer_class = FollowSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
+class FollowDestroyAPIView(generics.DestroyAPIView):
+    queryset = Follow.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        user = self.request.user
+        following_user = get_object_or_404(User, username=self.kwargs['username'])
+        return get_object_or_404(Follow, user=user, following_user=following_user)

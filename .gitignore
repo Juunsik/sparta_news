@@ -163,5 +163,3 @@ cython_debug/
 .python-version
 poetry.lock
 pyproject.toml
-**/migrations/*
-!**/migrations/__init__.py
