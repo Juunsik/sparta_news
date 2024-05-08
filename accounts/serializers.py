@@ -36,4 +36,8 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             "description",
             "password",
             "password2",
+<<<<<<< HEAD
         )
+=======
+        )
+>>>>>>> 533891b914931f4f6b9035234547749b501e5e5f
