@@ -33,5 +33,4 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.content
-from django.contrib.auth import get_user_model
 
