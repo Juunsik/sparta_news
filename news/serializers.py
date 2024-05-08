@@ -14,9 +14,9 @@ class NewsSerializer(serializers.ModelSerializer):
             'author': {'read_only': True}
         }
 
-    def create(self, validated_data):
-        validated_data['author'] = self.context['request'].user
-        return super().create(validated_data)
+    # def create(self, validated_data):
+    #     validated_data['author'] = self.context['request'].user
+    #     return super().create(validated_data)
     
     
     
