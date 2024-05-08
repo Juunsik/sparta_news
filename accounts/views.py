@@ -48,8 +48,7 @@ class UserDetailAPIView(APIView):
 
 
 
-class FollowCreateAPIView(generics.CreateAPIView):
-    serializer_class = FollowSerializer
+class FollowListCreateAPIView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_serializer_context(self):
@@ -57,11 +56,21 @@ class FollowCreateAPIView(generics.CreateAPIView):
         context['request'] = self.request
         return context
 
-class FollowDestroyAPIView(generics.DestroyAPIView):
-    queryset = Follow.objects.all()
+    def get(self):
+        user = self.request.user
+        return Follow.objects.filter(user=user)
+
+    def post(self, serializer):
+        serializer.save(user=self.request.user)
+
+class FollowRetrieveDestroyAPIView(generics.RetrieveDestroyAPIView):
+    serializer_class = FollowSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_object(self):
+    def get_queryset(self):
         user = self.request.user
+        return Follow.objects.filter(user=user)
+
+    def get_object(self):
         following_user = get_object_or_404(User, username=self.kwargs['username'])
-        return get_object_or_404(Follow, user=user, following_user=following_user)
+        return get_object_or_404(Follow, user=self.request.user, following_user=following_user)
