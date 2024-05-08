@@ -2,7 +2,6 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.views import APIView
-<<<<<<< HEAD
 from .models import Comment, News
 from .serializers import CommentSerializer, NewsSerializer
 from rest_framework.response import Response
@@ -10,14 +9,6 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework import status
-=======
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.exceptions import ValidationError
-from .models import News, Comment
-from .serializers import NewsSerializer, CommentSerializer
-
->>>>>>> c8b145df01f23b815d61c68b6f1a6dde2d6f8e30
 
 # Create your views here.
 class NewsListAPIView(APIView):
@@ -72,14 +63,7 @@ class NewsDetailAPIView(APIView):
             news.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
-<<<<<<< HEAD
             return Response({"detail": "삭제 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
-=======
-            return Response(
-                {"detail": "삭제 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN
-            )
-
->>>>>>> c8b145df01f23b815d61c68b6f1a6dde2d6f8e30
 
 
 class CommentGetPost(APIView):
@@ -88,13 +72,8 @@ class CommentGetPost(APIView):
         comments = news.comments.all()
         serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data)
-<<<<<<< HEAD
     
     def post(self, request, news_pk):
-=======
-
-    def post(self, request, news_id):
->>>>>>> c8b145df01f23b815d61c68b6f1a6dde2d6f8e30
         if not request.user.is_authenticated:
             return Response(
                 {"error": "인증이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED
@@ -135,8 +114,5 @@ class CommentPutDelete(APIView):
         comment.delete()
         data = {"delete": f"댓글 ({comment_pk})번이 삭제되었습니다."}
         return Response(data, status=status.HTTP_204_NO_CONTENT)
-<<<<<<< HEAD
 
 
-=======
->>>>>>> c8b145df01f23b815d61c68b6f1a6dde2d6f8e30

@@ -41,9 +41,5 @@ class UserDetailAPIView(APIView):
             if password:
                 user.set_password(password)
                 user.save()
-<<<<<<< HEAD
             serializer=UserUpdateSerializer(user)
-=======
-            serializer=UserDetailSerializer(user)
->>>>>>> c8b145df01f23b815d61c68b6f1a6dde2d6f8e30
             return Response(serializer.data, status=status.HTTP_200_OK)

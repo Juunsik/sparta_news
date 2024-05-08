@@ -35,9 +35,5 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         fields = (
             "description",
             "password",
-<<<<<<< HEAD
-            "password2",)
-=======
             "password2",
         )
->>>>>>> c8b145df01f23b815d61c68b6f1a6dde2d6f8e30
