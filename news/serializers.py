@@ -1,5 +1,8 @@
 from rest_framework import serializers
+<<<<<<< HEAD
 from .models import Comment
+=======
+>>>>>>> c8b145df01f23b815d61c68b6f1a6dde2d6f8e30
 from .models import News
 from django.contrib.auth import get_user_model
 
@@ -18,10 +21,15 @@ class NewsSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['author'] = self.context['request'].user
         return super().create(validated_data)
+<<<<<<< HEAD
     
     
     
     
+=======
+from .models import Comment
+
+>>>>>>> c8b145df01f23b815d61c68b6f1a6dde2d6f8e30
 class CommentSerializer(serializers.ModelSerializer):
     
     user = serializers.SerializerMethodField()
@@ -39,6 +47,9 @@ class CommentSerializer(serializers.ModelSerializer):
         validated_data['news'] = news
         return super().create(validated_data)
 
+<<<<<<< HEAD
 
 
     
+=======
+>>>>>>> c8b145df01f23b815d61c68b6f1a6dde2d6f8e30
