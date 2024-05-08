@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Comment, News
+from accounts.models import User
 from .serializers import CommentSerializer, NewsSerializer
 
 # Create your views here.
@@ -111,4 +112,43 @@ class CommentPutDelete(APIView):
         data = {"delete": f"댓글 ({comment_pk})번이 삭제되었습니다."}
         return Response(data, status=status.HTTP_204_NO_CONTENT)
 
+class LikeNews(APIView):
+    permission_classes = [IsAuthenticated]    
 
+    def post(self, request, news_pk):
+        news = get_object_or_404(News, pk=news_pk)
+        if news.likes.filter(pk=request.user.pk).exists():
+            news.likes.remove(request.user)
+            return Response({"likes": news.likes.count()}, status=status.HTTP_200_OK)
+        else:
+            news.likes.add(request.user)
+        return Response({"likes": news.likes.count()}, status=status.HTTP_200_OK)
+    
+class LikedNews(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        liked_news = News.objects.filter(likes=request.user)
+        serializer = NewsSerializer(liked_news, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class LikeComment(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, comment_pk):
+        comment = get_object_or_404(Comment, pk=comment_pk)
+        if comment.likes.filter(pk=request.user.pk).exists():
+            comment.likes.remove(request.user)
+            return Response({"likes": comment.likes.count()}, status=status.HTTP_200_OK)
+        else:
+            comment.likes.add(request.user)
+        return Response({"likes": comment.likes.count()}, status=status.HTTP_200_OK)
+    
+class LikedComments(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        liked_comments = Comment.objects.filter(likes=request.user)
+        serializer = CommentSerializer(liked_comments, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
