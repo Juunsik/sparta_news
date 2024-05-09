@@ -10,7 +10,7 @@ class NewsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = News
-        fields = ['id', 'type', 'title', 'url', 'content', 'created_at', 'author', 'likes_count']
+        fields = ['id', 'category', 'title', 'url', 'content', 'created_at', 'author', 'likes_count']
         extra_kwargs = {
             'author': {'read_only': True}
         }

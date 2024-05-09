@@ -8,14 +8,14 @@ User = get_user_model()
 
 
 class News(models.Model):
-    TYPE_CHOICES = {
+    CATEGORY_CHOICES = {
         ("news", "news"),
         ('weekly','weekly'),
         ("ask", "ask"),
         ("show", "show"),
         ("plus", "plus"),
     }
-    type = models.CharField(max_length=10, choices=TYPE_CHOICES)
+    category = models.CharField(max_length=10, choices=CATEGORY_CHOICES)
     title = models.CharField(max_length=255)
     url = models.URLField()
     content = models.TextField()
