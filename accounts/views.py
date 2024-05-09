@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from accounts.models import Follow, User
 from .serializers import UserSerializer, UserDetailSerializer, UserUpdateSerializer, FollowSerializer
+from rest_framework.permissions import IsAuthenticated
 
 # Create your views here.
 
@@ -47,9 +48,39 @@ class UserDetailAPIView(APIView):
         
 
 
+class FollowListView(generics.ListAPIView):
+    serializer_class = FollowSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        username = self.kwargs.get('username')
+        user = get_object_or_404(User, username=username)
+        followers = Follow.objects.filter(followed=user)
+        following = Follow.objects.filter(follower=user)
+        return followers | following
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        username = self.kwargs.get('username')
+        user = get_object_or_404(User, username=username)
+
+        followers = queryset.filter(followed=user)
+        following = queryset.filter(follower=user)
+
+        followers_serializer = self.get_serializer(followers, many=True)
+        following_serializer = self.get_serializer(following, many=True)
+
+        return Response({
+            'followers': followers_serializer.data,
+            'following': following_serializer.data
+        })
+        
+
 
 class FollowAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request, username):
+        
         followed_user = get_object_or_404(User, username=username)
         if request.user == followed_user:
             return Response({"detail": "자기 자신을 팔로우 할 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
@@ -70,11 +101,3 @@ class FollowAPIView(APIView):
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def get(self, request):
-        user_followers = Follow.objects.filter(followed=request.user)
-        serializer = FollowSerializer(user_followers, many=True)
-        return Response(serializer.data)
-        
-        
-        
-        
