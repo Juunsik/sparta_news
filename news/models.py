@@ -10,9 +10,10 @@ User = get_user_model()
 class News(models.Model):
     TYPE_CHOICES = {
         ("news", "news"),
+        ('weekly','weekly'),
         ("ask", "ask"),
         ("show", "show"),
-        ("gn+", "gn+"),
+        ("plus", "plus"),
     }
     type = models.CharField(max_length=10, choices=TYPE_CHOICES)
     title = models.CharField(max_length=255)

@@ -9,30 +9,55 @@ from rest_framework.permissions import (
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
-from django.db.models import Count
+from django.db.models import Count, Q
 from accounts.models import User
 from .models import Comment, News
 from .serializers import CommentSerializer, NewsSerializer
 from .news_generator import GenerateNews
+from .pagination import PaginationHandlerMixin
 
 
 # Create your views here.
-class NewsListAPIView(APIView):
+class NewsPagination(PageNumberPagination):
+    page_size = 10
+
+
+class NewsListAPIView(APIView, PaginationHandlerMixin):
     permission_classes = [IsAuthenticatedOrReadOnly]
+    pagination_class = NewsPagination
 
     def get(self, request):
-        news = News.objects.annotate(likes_count=Count("likes")).order_by(
-            "-likes_count"
-        )
-        paginator = PageNumberPagination()
-        result_page = paginator.paginate_queryset(news, request)
-        serializer = NewsSerializer(result_page, many=True)
-        return paginator.get_paginated_response(serializer.data)
+        if request.GET.get("type") == "weekly":
+            news = (
+                News.objects.filter(Q(type="news") | Q(type="show") | Q(type="plus"))
+                .annotate(likes_count=Count("likes"))
+                .order_by("-likes_count")[:20]
+            )
+        elif request.GET.get("type") == "plus":
+            news = News.objects.filter(type="plus").order_by("-created_at")
+        elif request.GET.get("type") == "ask":
+            news = News.objects.filter(type="ask").order_by("-created_at")
+        elif request.GET.get("type") == "show":
+            news = News.objects.filter(type="show").order_by("-created_at")
+        elif request.GET.get("type") is None:
+            news = News.objects.all().order_by("-created_at")
+
+        page = self.paginate_queryset(news)
+        if page is not None:
+            serializer = self.get_paginated_response(
+                NewsSerializer(page, many=True).data
+            )
+        else:
+            serializer = NewsSerializer(news, many=True)
+        return Response(serializer.data)
 
     def post(self, request):
         serializer = NewsSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
-            serializer.save(author=request.user)
+            news = serializer.save(author=request.user)
+            if news.type == "ask":
+                news.url = ""
+                news.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -168,7 +193,7 @@ class AIGenerateNews(APIView):
 
             serializer = NewsSerializer(
                 data={
-                    "type": "gn+",
+                    "type": "plus",
                     "title": news_data["title"],
                     "content": news_data["content"],
                     "url": news_data["url"],
@@ -176,7 +201,8 @@ class AIGenerateNews(APIView):
                 context={"request": request},
             )
             if serializer.is_valid():
-                serializer.save(author_id=admin_user.pk)
+                news = serializer.save(author_id=admin_user.pk)
+                news.title = "GN+:" + news.title
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
