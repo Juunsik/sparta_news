@@ -27,19 +27,19 @@ class NewsListAPIView(APIView, PaginationHandlerMixin):
     pagination_class = NewsPagination
 
     def get(self, request):
-        if request.GET.get("type") == "weekly":
+        if request.GET.get("category") == "weekly":
             news = (
-                News.objects.filter(Q(type="news") | Q(type="show") | Q(type="plus"))
+                News.objects.filter(Q(category="news") | Q(category="show") | Q(category="plus"))
                 .annotate(likes_count=Count("likes"))
                 .order_by("-likes_count")[:20]
             )
-        elif request.GET.get("type") == "plus":
-            news = News.objects.filter(type="plus").order_by("-created_at")
-        elif request.GET.get("type") == "ask":
-            news = News.objects.filter(type="ask").order_by("-created_at")
-        elif request.GET.get("type") == "show":
-            news = News.objects.filter(type="show").order_by("-created_at")
-        elif request.GET.get("type") is None:
+        elif request.GET.get("category") == "plus":
+            news = News.objects.filter(category="plus").order_by("-created_at")
+        elif request.GET.get("category") == "ask":
+            news = News.objects.filter(category="ask").order_by("-created_at")
+        elif request.GET.get("category") == "show":
+            news = News.objects.filter(category="show").order_by("-created_at")
+        elif request.GET.get("category") is None:
             news = News.objects.all().order_by("-created_at")
 
         page = self.paginate_queryset(news)
@@ -55,7 +55,7 @@ class NewsListAPIView(APIView, PaginationHandlerMixin):
         serializer = NewsSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
             news = serializer.save(author=request.user)
-            if news.type == "ask":
+            if news.category == "ask":
                 news.url = ""
                 news.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -193,7 +193,7 @@ class AIGenerateNews(APIView):
 
             serializer = NewsSerializer(
                 data={
-                    "type": "plus",
+                    "category": "plus",
                     "title": news_data["title"],
                     "content": news_data["content"],
                     "url": news_data["url"],

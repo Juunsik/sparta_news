@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from .models import User
-
+from .models import User, Follow
+from rest_framework.validators import UniqueTogetherValidator
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -37,3 +37,9 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             "password",
             "password2",
         )
+
+
+class FollowSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Follow
+        fields = '__all__'
