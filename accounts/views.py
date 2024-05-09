@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import status, generics, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from accounts.models import Follow
+from accounts.models import Follow, User
 from .serializers import UserSerializer, UserDetailSerializer, UserUpdateSerializer, FollowSerializer
 
 # Create your views here.
@@ -48,15 +48,29 @@ class UserDetailAPIView(APIView):
 
 
 
-class FollowView(generics.CreateAPIView, generics.ListAPIView):
-    serializer_class = FollowSerializer
-    permission_classes = [permissions.IsAuthenticated]
+class FollowAPIView(APIView):
+    def get(self, request):
+        user = request.user
+        followings = Follow.objects.filter(follower=user)
+        serializer = FollowSerializer(followings, many=True)
+        return Response(serializer.data)
 
-    def get_queryset(self):
-        user = self.request.user
-        return Follow.objects.filter(follower=user)
+    def post(self, request):
+        user = request.user
+        followed_id = request.data.get('followed_id')
+        try:
+            followed_user = User.objects.get(id=followed_id)
+        except User.DoesNotExist:
+            return Response({'error': '유저를 찾을 수 없습니다'}, status=status.HTTP_404_NOT_FOUND)
+        
+        if followed_user == user:
+            return Response({'error': '스스로를 팔로우 할 수 없습니다'}, status=status.HTTP_400_BAD_REQUEST)
 
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context['request'] = self.request
-        return context
+        try:
+            follow_instance = Follow.objects.get(follower=user, followed=followed_user)
+            follow_instance.delete()
+            return Response({'message': f"유저({followed_user})와 언팔로우했습니다."}, status=status.HTTP_200_OK)
+        except Follow.DoesNotExist:
+            follow_instance = Follow.objects.create(follower=user, followed=followed_user)
+            serializer = FollowSerializer(follow_instance)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)

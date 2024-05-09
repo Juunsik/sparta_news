@@ -40,22 +40,6 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
 
 class FollowSerializer(serializers.ModelSerializer):
-    followed = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
-
     class Meta:
         model = Follow
-        fields = ('followed',)
-
-    def validate_followed(self, value):
-        user = self.context['request'].user
-        if user == value:
-            raise serializers.ValidationError("스스로를 팔로우할 순 없습니다.")
-        return value
-
-    def create(self, validated_data):
-        user = self.context['request'].user
-        followed = validated_data['followed']
-        follow, created = Follow.objects.get_or_create(follower=user, followed=followed)
-        if not created:
-            follow.delete()
-        return follow
+        fields = ['follower', 'followed', 'created_at']
