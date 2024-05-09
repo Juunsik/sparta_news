@@ -49,29 +49,26 @@ class UserDetailAPIView(APIView):
         
 
 
-class FollowListView(generics.ListAPIView):
+
+class FollowListView(generics.RetrieveAPIView):
     serializer_class = FollowSerializer
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
+    def get_object(self):
         user = self.request.user
-        return Follow.objects.filter(Q(followed=user) | Q(follower=user))
+        follow_relation = Follow.objects.filter(follower=user).first()
+        return follow_relation
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        followers = queryset.filter(followed=request.user)
-        following = queryset.filter(follower=request.user)
-        followers_serializer = self.get_serializer(followers, many=True)
-        following_serializer = self.get_serializer(following, many=True)
-        return Response({
-            'followers': followers_serializer.data,
-            'following': following_serializer.data
-        })
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
 
 class FollowAPIView(APIView):
     permission_classes = [IsAuthenticated]
+    
     def post(self, request, username):
-        
         followed_user = get_object_or_404(User, username=username)
         if request.user == followed_user:
             return Response({"detail": "자기 자신을 팔로우 할 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
