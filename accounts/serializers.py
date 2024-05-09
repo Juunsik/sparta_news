@@ -42,4 +42,4 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 class FollowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Follow
-        fields = ['follower', 'followed', 'created_at']
+        fields = '__all__'

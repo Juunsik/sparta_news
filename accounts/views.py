@@ -49,28 +49,32 @@ class UserDetailAPIView(APIView):
 
 
 class FollowAPIView(APIView):
-    def get(self, request):
-        user = request.user
-        followings = Follow.objects.filter(follower=user)
-        serializer = FollowSerializer(followings, many=True)
-        return Response(serializer.data)
-
-    def post(self, request):
-        user = request.user
-        followed_id = request.data.get('followed_id')
-        try:
-            followed_user = User.objects.get(id=followed_id)
-        except User.DoesNotExist:
-            return Response({'error': '유저를 찾을 수 없습니다'}, status=status.HTTP_404_NOT_FOUND)
+    def post(self, request, username):
+        followed_user = get_object_or_404(User, username=username)
+        if request.user == followed_user:
+            return Response({"detail": "자기 자신을 팔로우 할 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
         
-        if followed_user == user:
-            return Response({'error': '스스로를 팔로우 할 수 없습니다'}, status=status.HTTP_400_BAD_REQUEST)
+        # 팔로우 관계 확인
+        follow_exist = Follow.objects.filter(follower=request.user, followed=followed_user).exists()
 
-        try:
-            follow_instance = Follow.objects.get(follower=user, followed=followed_user)
-            follow_instance.delete()
-            return Response({'message': f"유저({followed_user})와 언팔로우했습니다."}, status=status.HTTP_200_OK)
-        except Follow.DoesNotExist:
-            follow_instance = Follow.objects.create(follower=user, followed=followed_user)
-            serializer = FollowSerializer(follow_instance)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if follow_exist:
+            # 이미 팔로우한 경우 언팔로우
+            Follow.objects.filter(follower=request.user, followed=followed_user).delete()
+            return Response({"detail": f"유저({followed_user})와 언팔로우했습니다."}, status=status.HTTP_200_OK)
+        else:
+            # 팔로우
+            follow_data = {'follower': request.user.id, 'followed': followed_user.id}
+            serializer = FollowSerializer(data=follow_data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        user_followers = Follow.objects.filter(followed=request.user)
+        serializer = FollowSerializer(user_followers, many=True)
+        return Response(serializer.data)
+        
+        
+        
+        
