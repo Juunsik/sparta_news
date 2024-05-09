@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.conf import settings
 
 # Create your models here.
 class User(AbstractUser):
@@ -18,6 +17,3 @@ class Follow(models.Model):
 
     class Meta:
         unique_together = ('follower', 'followed')
-
-    def __str__(self):
-        return f'{self.follower} -> {self.followed}'

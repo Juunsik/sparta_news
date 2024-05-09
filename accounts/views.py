@@ -1,11 +1,9 @@
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
-from rest_framework import status
+from rest_framework import status, generics, permissions
 from rest_framework.views import APIView
-from rest_framework.viewsets import GenericViewSet
-from rest_framework.decorators import action
 from rest_framework.response import Response
-from accounts.models import Follow, User
+from accounts.models import Follow
 from .serializers import UserSerializer, UserDetailSerializer, UserUpdateSerializer, FollowSerializer
 
 # Create your views here.
@@ -50,31 +48,15 @@ class UserDetailAPIView(APIView):
 
 
 
-class FollowViewSet(GenericViewSet):
-    queryset = Follow.objects.all()
+class FollowView(generics.CreateAPIView, generics.ListAPIView):
     serializer_class = FollowSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-    @action(detail=False, methods=['get'])
-    def get_followings(self, request):
-        user = request.user
-        followings = Follow.objects.filter(follower=user)
-        serializer = FollowSerializer(followings, many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        user = self.request.user
+        return Follow.objects.filter(follower=user)
 
-    @action(detail=True, methods=['post'])
-    def follow(self, request, pk=None):
-        user = request.user
-        try:
-            followed_user = User.objects.get(id=pk)
-        except User.DoesNotExist:
-            return Response({'error': '유저를 찾지 못했습니다'}, status=status.HTTP_404_NOT_FOUND)
-        if followed_user == user:
-            return Response({'error': '자기 자신은 팔로우하실 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
-        try:
-            follow_instance = Follow.objects.get(follower=user, followed=followed_user)
-            follow_instance.delete()
-            return Response({'message': f'({followed_user})님을 언팔로우 하셨습니다.'}, status=status.HTTP_200_OK)
-        except Follow.DoesNotExist:
-            follow_instance = Follow.objects.create(follower=user, followed=followed_user)
-            serializer = FollowSerializer(follow_instance)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context

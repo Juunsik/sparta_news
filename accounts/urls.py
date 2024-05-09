@@ -12,8 +12,5 @@ urlpatterns = [
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("logout/", TokenBlacklistView.as_view(), name="logout"),
     path("<str:username>/",views.UserDetailAPIView.as_view()),
-    path('follow/', views.FollowViewSet.as_view({
-        'get': 'get_followings',
-        'post': 'follow'
-    }), name='follow'),
+    path('follow/', views.FollowView.as_view(), name='follow'),
 ]
