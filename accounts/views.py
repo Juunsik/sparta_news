@@ -2,6 +2,8 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.viewsets import GenericViewSet
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from accounts.models import Follow, User
 from .serializers import UserSerializer, UserDetailSerializer, UserUpdateSerializer, FollowSerializer
@@ -48,27 +50,26 @@ class UserDetailAPIView(APIView):
 
 
 
-class FollowAPIView(APIView):
-    
-    http_method_names = ['get', 'post']
-    
-    def get(self, request):
+class FollowViewSet(GenericViewSet):
+    queryset = Follow.objects.all()
+    serializer_class = FollowSerializer
+
+    @action(detail=False, methods=['get'])
+    def get_followings(self, request):
         user = request.user
         followings = Follow.objects.filter(follower=user)
         serializer = FollowSerializer(followings, many=True)
         return Response(serializer.data)
 
-    def post(self, request):
+    @action(detail=True, methods=['post'])
+    def follow(self, request, pk=None):
         user = request.user
-        followed_id = request.data.get('followed_id')
         try:
-            followed_user = User.objects.get(id=followed_id)
+            followed_user = User.objects.get(id=pk)
         except User.DoesNotExist:
             return Response({'error': '유저를 찾지 못했습니다'}, status=status.HTTP_404_NOT_FOUND)
-        
         if followed_user == user:
-            return Response({'error': '자기 자신은 팔로우하실수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
-
+            return Response({'error': '자기 자신은 팔로우하실 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
         try:
             follow_instance = Follow.objects.get(follower=user, followed=followed_user)
             follow_instance.delete()
