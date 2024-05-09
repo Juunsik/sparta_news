@@ -1,12 +1,12 @@
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
-from rest_framework import status, generics, permissions
+from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from accounts.models import Follow, User
-from django.db.models import Q
 from .serializers import UserSerializer, UserDetailSerializer, UserUpdateSerializer, FollowSerializer
 from rest_framework.permissions import IsAuthenticated
+from django.http import JsonResponse
 
 # Create your views here.
 
@@ -50,20 +50,19 @@ class UserDetailAPIView(APIView):
 
 
 
-class FollowListView(generics.RetrieveAPIView):
-    serializer_class = FollowSerializer
+class FollowListAPIView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
-    def get_object(self):
-        user = self.request.user
-        follow_relation = Follow.objects.filter(follower=user).first()
-        return follow_relation
-
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
-
+    def get(self, request, *args, **kwargs):
+        username = kwargs.get('username')
+        user = get_object_or_404(User, username=username)
+        following = list(Follow.objects.filter(follower=user).values_list('followed__username', flat=True))
+        followers = list(Follow.objects.filter(followed=user).values_list('follower__username', flat=True))
+        data = {
+            "내가 팔로우한 사람": following,
+            "당신을 팔로잉한 사람": followers
+        }
+        return JsonResponse(data, json_dumps_params={'ensure_ascii': False}, status=200)
 
 class FollowAPIView(APIView):
     permission_classes = [IsAuthenticated]

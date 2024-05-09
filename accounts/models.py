@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.db.models import UniqueConstraint
 
 # Create your models here.
 class User(AbstractUser):
@@ -16,4 +17,4 @@ class Follow(models.Model):
     followed_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ['follower', 'followed']
+        UniqueConstraint(fields=['follower', 'followed'], name='unique_follower')
