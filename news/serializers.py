@@ -6,13 +6,17 @@ User = get_user_model()
 
 class NewsSerializer(serializers.ModelSerializer):
     author = serializers.PrimaryKeyRelatedField(read_only=True, default=serializers.CurrentUserDefault())
+    likes_count = serializers.SerializerMethodField() 
 
     class Meta:
         model = News
-        fields = ['id', 'type', 'title', 'url', 'content', 'created_at', 'author']
+        fields = ['id', 'type', 'title', 'url', 'content', 'created_at', 'author', 'likes_count']
         extra_kwargs = {
             'author': {'read_only': True}
         }
+        
+    def get_likes_count(self, obj):
+        return obj.likes.count()
 
     # def create(self, validated_data):
     #     validated_data['author'] = self.context['request'].user
