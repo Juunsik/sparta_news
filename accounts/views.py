@@ -4,6 +4,7 @@ from rest_framework import status, generics, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from accounts.models import Follow, User
+from django.db.models import Q
 from .serializers import UserSerializer, UserDetailSerializer, UserUpdateSerializer, FollowSerializer
 from rest_framework.permissions import IsAuthenticated
 
@@ -54,12 +55,10 @@ class FollowListView(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        followers = Follow.objects.filter(followed=user)
-        following = Follow.objects.filter(follower=user)
-        return followers | following
+        return Follow.objects.filter(Q(followed=user) | Q(follower=user))
 
     def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.get_queryset()
         followers = queryset.filter(followed=request.user)
         following = queryset.filter(follower=request.user)
         followers_serializer = self.get_serializer(followers, many=True)
@@ -68,7 +67,6 @@ class FollowListView(generics.ListAPIView):
             'followers': followers_serializer.data,
             'following': following_serializer.data
         })
-
 
 class FollowAPIView(APIView):
     permission_classes = [IsAuthenticated]
