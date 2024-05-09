@@ -26,16 +26,22 @@ class UserJoinView(APIView):
 
 
 class UserDetailAPIView(APIView):
+    permission_classes=[IsAuthenticated]
 
     def get_object(self, username):
         return get_object_or_404(get_user_model(), username=username)
 
     def get(self, request, username):
         user = self.get_object(username)
+        if user!=request.user:
+            return Response({'error': "You do not have permission to query."}, status=status.HTTP_401_UNAUTHORIZED)
         serializer = UserDetailSerializer(user)
         return Response(serializer.data)
 
     def put(self, request, username):
+        user = self.get_object(username)
+        if user!=request.user:
+            return Response({'error': "You do not have permission to query."}, status=status.HTTP_401_UNAUTHORIZED)
         password = request.data.get("password")
         password2 = request.data.get("password2")
         if (password or password2) and (password != password2):
@@ -44,7 +50,6 @@ class UserDetailAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        user = self.get_object(username)
         serializer = UserDetailSerializer(user, data=request.data, partial=True)
 
         if serializer.is_valid():
