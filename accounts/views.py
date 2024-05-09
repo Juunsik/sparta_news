@@ -51,40 +51,36 @@ class UserDetailAPIView(APIView):
 
 
 class FollowListAPIView(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated]
+   permission_classes = [IsAuthenticated]
 
-    def get(self, request, *args, **kwargs):
-        username = kwargs.get('username')
-        user = get_object_or_404(User, username=username)
-        following = list(Follow.objects.filter(follower=user).values_list('followed__username', flat=True))
-        followers = list(Follow.objects.filter(followed=user).values_list('follower__username', flat=True))
-        data = {
-            "내가 팔로우한 사람": following,
-            "당신을 팔로잉한 사람": followers
-        }
-        return JsonResponse(data, json_dumps_params={'ensure_ascii': False}, status=status.HTTP_200_OK)
+   def get(self, request, *args, **kwargs):
+       username = kwargs.get('username')
+       user = get_object_or_404(User, username=username)
+       following = list(Follow.objects.filter(follower=user).values_list('followed__username', flat=True))
+       followers = list(Follow.objects.filter(followed=user).values_list('follower__username', flat=True))
+       data = {
+           "following": following,
+           "followers": followers
+       }
+       return JsonResponse(data, json_dumps_params={'ensure_ascii': False}, status=status.HTTP_200_OK)
 
-class FollowAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-    
-    def post(self, request, username):
-        followed_user = get_object_or_404(User, username=username)
-        if request.user == followed_user:
-            return Response({"detail": "자기 자신을 팔로우 할 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # 팔로우 관계 확인
-        follow_exist = Follow.objects.filter(follower=request.user, followed=followed_user).exists()
+   def post(self, request, *args, **kwargs):
+       username = kwargs.get('username')
+       followed_user = get_object_or_404(User, username=username)
 
-        if follow_exist:
-            # 이미 팔로우한 경우 언팔로우
-            Follow.objects.filter(follower=request.user, followed=followed_user).delete()
-            return Response({"detail": f"유저({followed_user})와 언팔로우했습니다."}, status=status.HTTP_200_OK)
-        else:
-            # 팔로우
-            follow_data = {'follower': request.user.id, 'followed': followed_user.id}
-            serializer = FollowSerializer(data=follow_data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+       if request.user == followed_user:
+           return Response({"detail": "자기 자신을 팔로우 할 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+       follow_exist = Follow.objects.filter(follower=request.user, followed=followed_user).exists()
+
+       if follow_exist:
+           Follow.objects.filter(follower=request.user, followed=followed_user).delete()
+           return Response({"detail": f"유저({followed_user})와 언팔로우했습니다."}, status=status.HTTP_200_OK)
+       else:
+           follow_data = {'follower': request.user.id, 'followed': followed_user.id}
+           serializer = FollowSerializer(data=follow_data)
+           if serializer.is_valid():
+               serializer.save()
+               return Response(serializer.data, status=status.HTTP_201_CREATED)
+           return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

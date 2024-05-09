@@ -13,5 +13,4 @@ urlpatterns = [
     path("logout/", TokenBlacklistView.as_view(), name="logout"),
     path("<str:username>/",views.UserDetailAPIView.as_view()),
     path('followList/<str:username>/', views.FollowListAPIView.as_view(), name='follow-list'),
-    path('follow/<str:username>/', views.FollowAPIView.as_view(), name='follow'),
 ]
