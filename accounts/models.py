@@ -10,10 +10,14 @@ class User(AbstractUser):
         return self.username
     
     
+
 class Follow(models.Model):
-    user = models.ForeignKey(User, related_name='following', on_delete=models.CASCADE)
-    following_user = models.ForeignKey(User, related_name='followers', on_delete=models.CASCADE)
+    follower = models.ForeignKey(User, related_name='following', on_delete=models.CASCADE)
+    followed = models.ForeignKey(User, related_name='followers', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'following_user')
+        unique_together = ('follower', 'followed')
+
+    def __str__(self):
+        return f'{self.follower} -> {self.followed}'
