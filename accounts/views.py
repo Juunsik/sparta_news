@@ -1,8 +1,9 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from accounts.models import Follow, User
 from .serializers import UserSerializer, UserDetailSerializer, UserUpdateSerializer, FollowSerializer
 
 # Create your views here.
@@ -48,6 +49,9 @@ class UserDetailAPIView(APIView):
 
 
 class FollowAPIView(APIView):
+    
+    http_method_names = ['get', 'post']
+    
     def get(self, request):
         user = request.user
         followings = Follow.objects.filter(follower=user)
