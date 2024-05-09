@@ -53,28 +53,21 @@ class FollowListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        username = self.kwargs.get('username')
-        user = get_object_or_404(User, username=username)
+        user = self.request.user
         followers = Follow.objects.filter(followed=user)
         following = Follow.objects.filter(follower=user)
         return followers | following
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        username = self.kwargs.get('username')
-        user = get_object_or_404(User, username=username)
-
-        followers = queryset.filter(followed=user)
-        following = queryset.filter(follower=user)
-
+        followers = queryset.filter(followed=request.user)
+        following = queryset.filter(follower=request.user)
         followers_serializer = self.get_serializer(followers, many=True)
         following_serializer = self.get_serializer(following, many=True)
-
         return Response({
             'followers': followers_serializer.data,
             'following': following_serializer.data
         })
-        
 
 
 class FollowAPIView(APIView):
