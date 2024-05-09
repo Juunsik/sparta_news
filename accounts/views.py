@@ -62,7 +62,7 @@ class FollowListAPIView(generics.GenericAPIView):
             "내가 팔로우한 사람": following,
             "당신을 팔로잉한 사람": followers
         }
-        return JsonResponse(data, json_dumps_params={'ensure_ascii': False}, status=200)
+        return JsonResponse(data, json_dumps_params={'ensure_ascii': False}, status=status.HTTP_200_OK)
 
 class FollowAPIView(APIView):
     permission_classes = [IsAuthenticated]
