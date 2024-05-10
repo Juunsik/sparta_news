@@ -33,6 +33,8 @@ class NewsListAPIView(APIView, PaginationHandlerMixin):
                 .annotate(likes_count=Count("likes"))
                 .order_by("-likes_count")[:20]
             )
+        elif request.GET.get("category") == "news":
+            news = News.objects.filter(category="news").order_by("-created_at")
         elif request.GET.get("category") == "plus":
             news = News.objects.filter(category="plus").order_by("-created_at")
         elif request.GET.get("category") == "ask":
@@ -73,17 +75,23 @@ class NewsDetailAPIView(APIView):
 
     def put(self, request, news_pk):
         news = get_object_or_404(News, pk=news_pk)
-        serializer = NewsSerializer(news, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
+        if request.user.is_superuser or news.author == request.user:
+            serializer = NewsSerializer(news, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "뉴스를 작성한 유저가 아닙니다."}, status=status.HTTP_403_FORBIDDEN)
 
-    def delete(self, request, pk):
-        news = get_object_or_404(News, pk=pk)
-        news.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    def delete(self, request, news_pk):
+        news = get_object_or_404(News, pk=news_pk)
+        if request.user.is_superuser or news.author == request.user:
+            news.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response({"error": "뉴스를 작성한 유저가 아닙니다."}, status=status.HTTP_403_FORBIDDEN)
 
 
 class CommentGetPost(APIView):
