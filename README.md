@@ -8,8 +8,9 @@ DRF를 사용하여 긱뉴스를 참고하여 스파르타 뉴스 백엔드 기�
 2024.05.03(금) ~ 2024.05.09(금)
 
 ## 개발 환경
-- python 3.8
+- python 3.10
 - Django 4.2
+- SQLite
 
 ## 기능
 - 회원가입
@@ -29,6 +30,11 @@ DRF를 사용하여 긱뉴스를 참고하여 스파르타 뉴스 백엔드 기�
 
 ## ERD
 
+  ![](https://github.com/Juunsik/sparta_news/blob/main/News_postman/erd1.png)
+
+## API
+  [API 명세 보러가기](https://www.notion.so/4-S-A-041f754dfeb44f59b7dee3d2049c6ec9)
+  
 ## 실행화면
 - 회원가입
   
